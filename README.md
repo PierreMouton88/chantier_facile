@@ -109,5 +109,5 @@ Le backend est organisé en modules NestJS (controller / service / DTO / guards)
 ## 👤 Auteur
 
 Pierre Mouton  
-[LinkedIn]  
-[GitHub]
+[LinkedIn]:pierremouton4
+[GitHub]: PierreMouton88
