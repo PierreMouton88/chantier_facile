@@ -1,0 +1,83 @@
+stages:
+  - lint
+  - build
+  - deploy
+
+variables:
+  IMAGE_NAME_BACK: $CI_REGISTRY_IMAGE/back
+  IMAGE_NAME_FRONT: $CI_REGISTRY_IMAGE/front
+
+lint:
+  stage: lint
+  image: node:20
+  variables:
+    DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
+  script:
+    - cd BACK
+    - npm install
+    - npx prisma generate
+    - npm run lint
+  only:
+    - main
+
+build_back:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $IMAGE_NAME_BACK:$CI_COMMIT_SHORT_SHA -f BACK/Dockerfile BACK/
+    - docker push $IMAGE_NAME_BACK:$CI_COMMIT_SHORT_SHA
+    - docker tag $IMAGE_NAME_BACK:$CI_COMMIT_SHORT_SHA $IMAGE_NAME_BACK:latest
+    - docker push $IMAGE_NAME_BACK:latest
+  only:
+    - main
+
+build_front:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $IMAGE_NAME_FRONT:$CI_COMMIT_SHORT_SHA -f FRONT/Dockerfile FRONT/
+    - docker push $IMAGE_NAME_FRONT:$CI_COMMIT_SHORT_SHA
+    - docker tag $IMAGE_NAME_FRONT:$CI_COMMIT_SHORT_SHA $IMAGE_NAME_FRONT:latest
+    - docker push $IMAGE_NAME_FRONT:latest
+  only:
+    - main
+
+.deploy_template: &deploy_template
+  stage: deploy
+  image: alpine
+  before_script:
+    - apk add --no-cache openssh-client
+    - mkdir -p ~/.ssh
+    - echo "$SSH_KEY" | base64 -d > /tmp/deploy_key
+    - chmod 600 /tmp/deploy_key
+    - ssh-keyscan -H $VPS_IP >> ~/.ssh/known_hosts || true
+  script:
+    - scp -i /tmp/deploy_key -o StrictHostKeyChecking=no docker-compose.yml $VPS_USER@$VPS_IP:~/docker-compose.yml
+    - |
+      ssh -i /tmp/deploy_key -o StrictHostKeyChecking=no $VPS_USER@$VPS_IP "
+        docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY &&
+        docker pull $IMAGE_NAME_BACK:latest &&
+        docker pull $IMAGE_NAME_FRONT:latest &&
+        BACK_IMAGE=$IMAGE_NAME_BACK:latest FRONT_IMAGE=$IMAGE_NAME_FRONT:latest docker compose -f ~/docker-compose.yml up -d back front
+      "
+  when: manual
+  only:
+    - main
+
+deploy_pierre:
+  <<: *deploy_template
+  variables:
+    VPS_IP: $VPS_IP_PIERRE
+    SSH_KEY: $SSH_PRIVATE_KEY_PIERRE
+
+deploy_kilian:
+  <<: *deploy_template
+  variables:
+    VPS_IP: $VPS_IP_KILIAN
+    SSH_KEY: $SSH_PRIVATE_KEY_KILIAN

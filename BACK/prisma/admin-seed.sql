@@ -1,0 +1,2 @@
+INSERT INTO `user` (`email`, `password`, `role`, `is_validated`, `created_at`, `updated_at`)
+VALUES ('admin@example.com', '$2b$10$LDGnZ4kGpN3cHOuWN6LBz.Mp6ynN6RV7UzJNPvZHTF9ApgIHBHCwy', 'admin', 1, NOW(), NOW());
