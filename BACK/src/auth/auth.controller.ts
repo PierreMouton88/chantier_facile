@@ -1,11 +1,13 @@
-import { Body, Controller, Post, Get, Req, Res } from '@nestjs/common';
+import { Body, Controller, Post, Get, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UserDeletionService } from '../user/services/user-deletion.service';
 import { SignupDto } from './dto/signup.dto';
 import { SigninDto } from './dto/signin.dto';
 import type { Request, Response } from 'express';
+import { Throttle, ThrottlerGuard, SkipThrottle } from '@nestjs/throttler';
 
 @Controller('auth')
+@UseGuards(ThrottlerGuard)
 export class AuthController {
   private readonly maxAgeAT = 15 * 60 * 1000;
   private readonly maxAgeRT = 7 * 24 * 60 * 60 * 1000;
@@ -14,7 +16,8 @@ export class AuthController {
     private readonly userDeletion: UserDeletionService,
   ) {}
 
-  // Inscription client et pose des cookies
+  // 5 tentatives par minute — protection brute force sur 3 routes sensibles (2 signups et signin)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('signup')
   async signupUser(
     @Body() dto: SignupDto,
@@ -25,7 +28,8 @@ export class AuthController {
     return out;
   }
 
-  // Inscription entreprise (mapping du body vers DTO) et pose des cookies
+
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('signup-entreprise')
   async signupEntreprise(
     @Body() dto: SignupDto,
@@ -36,7 +40,7 @@ export class AuthController {
     return out;
   }
 
-  // Connexion utilisateur et pose des cookies
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('signin')
   async signin(
     @Body() dto: SigninDto,
@@ -60,7 +64,7 @@ export class AuthController {
     return out;
   }
 
-  // Rafraîchissement du token via cookie 'refresh_token'
+  @SkipThrottle()
   @Post('refresh')
   async refresh(
     @Req() req: Request,
@@ -77,7 +81,8 @@ export class AuthController {
     return out;
   }
 
-  // Retourne la vue utilisateur à partir du cookie 'access_token'
+
+  @SkipThrottle()
   @Get('me')
   async me(@Req() req: Request) {
     const reqObj = req as unknown as {
@@ -86,11 +91,10 @@ export class AuthController {
     const accessToken = reqObj.cookies?.access_token;
     const token = typeof accessToken === 'string' ? accessToken : '';
     const user = await this.authService.getUserFromToken(token);
-    //console.log(user);
     return user;
   }
 
-  // Déconnexion: révocation du refresh token et suppression des cookies
+  @SkipThrottle()
   @Post('logout')
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const reqCookies = req as unknown as { cookies?: Record<string, unknown> };

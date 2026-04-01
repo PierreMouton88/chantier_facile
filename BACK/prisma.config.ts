@@ -7,7 +7,7 @@ export default defineConfig({
   migrations: {
     path: "prisma/migrations",
   },
-  engine: "classic",
+
   datasource: (() => {
     const shadow = process.env.SHADOW_DATABASE_URL;
     return {

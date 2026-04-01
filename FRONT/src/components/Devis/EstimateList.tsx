@@ -1,7 +1,7 @@
 import { formatDate, getPaymentTypeLabel, calculateTotal, getEstimateStatusBadge } from "../../utils/helpers"
 import StatusBadge from "../StatusBadge"
 import { estimateService } from "../../services/estimate.service"
-import { useAuthCtx } from "../../authContext/AuthContext"
+import { useMe } from "../../hooks/useAuth"
 import Button from "../Buttons"
 import type { Estimate } from "../../types/estimate.type"
 
@@ -13,7 +13,7 @@ type Props = {
 
 export default function EstimateList({ projectId, hideValidateButton, onValidate }: Props) {
   const { data: estimates, isLoading, isError, error } = estimateService.getAll()
-  const { user } = useAuthCtx()
+  const { data: user } = useMe()
   const { mutate: updateEstimate } = estimateService.update()
 
   const handleValidate = (id: number) => {

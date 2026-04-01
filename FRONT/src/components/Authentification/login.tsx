@@ -3,13 +3,11 @@ import { Formik, Form } from 'formik'
 import * as Yup from 'yup'
 import type { SigninFormValues } from '../../types/auth.form.type'
 import { useSignIn } from '../../hooks/useAuth'
-import { useAuthCtx } from '../../authContext/AuthContext'
 
 export default function SignIn() {
   const navigate = useNavigate()
   const location = useLocation() as { state?: { signupSuccess?: boolean; message?: string } }
   const signinMutation = useSignIn()
-  const { loginCtx } = useAuthCtx()
 
   const initialValues: SigninFormValues = {
     email: '',
@@ -25,18 +23,17 @@ export default function SignIn() {
       .required('Le mot de passe est requis'),
   })
 
-  const handleSubmit = async (values: SigninFormValues) => {
-    try {
-      const res = await signinMutation.mutateAsync(values)
-      loginCtx(res) // persiste access+refresh+user et met à jour le contexte
-      const role = res.user?.role
-      navigate(role === 'admin' ? '/admin' : '/dashboard')
-    } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } }; message?: string } | undefined
-      const message = err?.response?.data?.message ?? err?.message ?? 'Erreur lors de la connexion'
-      alert(message)
-    }
+const handleSubmit = async (values: SigninFormValues) => {
+  try {
+    const res = await signinMutation.mutateAsync(values)
+    const role = res.user?.role
+    navigate(role === 'admin' ? '/admin' : '/dashboard')
+  } catch (error: unknown) {
+    const err = error as { response?: { data?: { message?: string } }; message?: string } | undefined
+    const message = err?.response?.data?.message ?? err?.message ?? 'Erreur lors de la connexion'
+    alert(message)
   }
+}
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-white to-gray-100 px-4">

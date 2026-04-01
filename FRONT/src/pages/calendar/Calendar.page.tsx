@@ -6,11 +6,11 @@ import interactionPlugin from '@fullcalendar/interaction';
 import frLocale from '@fullcalendar/core/locales/fr';
 import { useGetAllProjectsByUserId } from '../../hooks/useProject'; // Ajustez le chemin selon votre structure
 import type { Task } from '../../types/task.type';
-import { useAuthCtx } from '../../authContext/AuthContext';
+import { useMe } from '../../hooks/useAuth';
 
 
 const CalendarPage: React.FC = () => {
-  const { user } = useAuthCtx();
+  const { data: user } = useMe();
   
   // On récupère les projets qui contiennent normalement les tâches
   const { data: projects, isLoading, isError } = useGetAllProjectsByUserId(user?.id);

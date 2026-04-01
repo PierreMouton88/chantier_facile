@@ -7,7 +7,7 @@ import { estimateService } from '../../services/estimate.service'
 import { useGetAllProjectsByUserId, useFindProjectById, useFindProjectWithTasks } from '../../hooks/useProject'
 import { useGetProjectDetails, useGetProjectTasks } from '../../hooks/useSearch'
 import Button from '../Buttons'
-import { useAuthCtx } from '../../authContext/AuthContext'
+import { useMe } from '../../hooks/useAuth'
 import { Plus, Trash2 } from 'lucide-react'
 type AddressResp = { address_line_1: string; zip_code: string; city: string; country: string }
 
@@ -18,7 +18,7 @@ type Props = {
 
 export default function CreateDevisForm({ projectId, onCreated }: Props) {
   const navigate = useNavigate()
-  const { user } = useAuthCtx()
+  const { data: user } = useMe()
   const initialProjectId = projectId ?? 0
   const [currentProjectId, setCurrentProjectId] = useState<number>(initialProjectId)
 

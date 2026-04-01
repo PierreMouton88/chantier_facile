@@ -14,9 +14,11 @@ import { AddressModule } from './address/address.module';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { SearchModule } from './search/search.module';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 20 }]),
     PrismaModule,
     AuthModule,
     ProfileModule,

@@ -1,11 +1,11 @@
-import { useAuthCtx } from "../authContext/AuthContext";
+import { useMe } from "../hooks/useAuth";
 import CustomerProfileCard from "../components/CustomerProfileCard";
 import EntrepriseProfileCard from "../components/EntrepriseProfileCard";
 import { useFindUserByIdwithProfile } from "../hooks/useUser";
 
 //En attendant d'avoir une vrai bdd d'utilisateurs, on force le mock
 const UserProfile = () => {
-  const { user } = useAuthCtx();
+  const { data: user } = useMe();
 
   const {
     data: userData,

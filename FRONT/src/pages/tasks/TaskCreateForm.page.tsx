@@ -1,12 +1,12 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCreateTask, useFindProjectWithTasks } from '../../hooks/useProject';
-import { useAuthCtx } from '../../authContext/AuthContext';
+import { useMe } from '../../hooks/useAuth';
 import { TaskForm } from './TaskForm.page';
 
 export const CreateTaskPage = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const { user } = useAuthCtx();
+  const { data: user } = useMe();
 
   const createTask = useCreateTask();
   const { data: project } = useFindProjectWithTasks(Number(projectId));

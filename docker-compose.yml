@@ -33,6 +33,7 @@ services:
     ports:
       - "3000:3000"
     environment:
+      NODE_ENV: "production"
       DATABASE_URL: "${DATABASE_URL}"
       PORT: 3000
       JWT_SECRET: "${JWT_SECRET}"
@@ -67,8 +68,8 @@ services:
     environment:
       PMA_HOST: mysql
       PMA_PORT: 3306
-      PMA_USER: root
-      PMA_PASSWORD: root
+      PMA_USER: "${MYSQL_ROOT_USER:-root}"
+      PMA_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
       UPLOAD_LIMIT: 100M
     networks:
       - app-network

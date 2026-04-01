@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom"
 import CustomerProfileForm from "../components/CustomerProfileForm"
 import EntrepriseProfileForm from "../components/EntrepriseProfileForm"
-import { useAuthCtx } from "../authContext/AuthContext"
+import { useMe } from "../hooks/useAuth"
 import { useFindUserByIdwithProfile, useUpdateUserProfile, useAddProfessionsToProfile, useRemoveProfessionFromProfile } from "../hooks/useUser"
 import { useGetAllProfessions } from "../hooks/useProfession"
 import { userApi } from "../api/user.api"
@@ -9,7 +9,7 @@ import { userApi } from "../api/user.api"
 const defaultAddress = { address_line_1: "", zip_code: "", city: "", country: "" }
 
 const EditUserProfile = () => {
-  const { user } = useAuthCtx()
+  const { data: user } = useMe()
   const navigate = useNavigate()
 
   const { data: userData, isLoading, error } = useFindUserByIdwithProfile(user?.id || 0)

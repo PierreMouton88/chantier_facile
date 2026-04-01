@@ -2,10 +2,10 @@ import { Plus } from 'lucide-react'
 import { projects } from '../data/Project'
 import ProjectCardCustomer from './ProjectCardCustomer'
 
-import { useAuthCtx } from '../authContext/AuthContext'
+import { useMe } from '../hooks/useAuth'
 
 const DashboardCardCustomer = () => {
- const { user } = useAuthCtx();
+ const { data: user } = useMe();
 
  // Extraction type-safe du nom du user
  const userName = user && user.role === 'customer' && 'profile' in user

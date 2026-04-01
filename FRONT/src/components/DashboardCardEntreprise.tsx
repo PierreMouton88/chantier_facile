@@ -1,10 +1,10 @@
 import { Clock } from 'lucide-react'
 import { projectsEntreprise } from '../data/ProjectEntreprise'
 import ProjectCardEntreprise from './ProjectCardEntreprise'
-import { useAuthCtx } from '../authContext/AuthContext'
+import { useMe } from '../hooks/useAuth'
 
 const DashboardCardEntreprise = () => {
-   const { user } = useAuthCtx();
+   const { data: user } = useMe();
 
    // Extraction type-safe du nom de l'entreprise
    const entrepriseName = user && user.role === 'entreprise' && 'profile' in user

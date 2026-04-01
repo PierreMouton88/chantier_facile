@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useGetAllProjectsByUserId } from '../../hooks/useProject';
-import { useAuthCtx } from '../../authContext/AuthContext';
+import { useMe } from '../../hooks/useAuth';
 import Button from '../../components/Buttons';
 import ProjectShow from '../../components/Projects/ProjectShow';
 import { TaskShow } from '../../components/Projects/Tasks/TaskShow';
@@ -9,7 +9,7 @@ import { TaskShow } from '../../components/Projects/Tasks/TaskShow';
 
 // Composant principal du tableau de bord des projets
 export const PageProjets: React.FC = () => {
-  const { user } = useAuthCtx()
+  const { data: user } = useMe()
   const { data: projects, isLoading: isLoadingProjects } = useGetAllProjectsByUserId(user!.id);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   console.log("project select :", selectedProjectId);

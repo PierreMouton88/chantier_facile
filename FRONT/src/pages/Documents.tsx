@@ -1,10 +1,10 @@
 import { NavLink, Outlet } from "react-router-dom"
 import Button from "../components/Buttons"
 import { Plus } from "lucide-react"
-import { useAuthCtx } from "../authContext/AuthContext"
+import { useMe } from "../hooks/useAuth"
 
 export default function Documents() {
-  const { user } = useAuthCtx()
+  const { data: user } = useMe()
   return (
     <div className="p-4 bg-white">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Mes Documents</h2>

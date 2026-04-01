@@ -18,7 +18,6 @@ import Devis from './pages/Devis'
 import Factures from './pages/Factures'
 import ProjectSearch from './pages/projets/ProjectSearch'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-
 import { ProjectForm } from './pages/projets/ProjectForm.page'
 import PageDashboard from './pages/PageDashboard'
 import { EditTaskPage } from './pages/tasks/TaskEditForm.page'
@@ -27,13 +26,11 @@ import { Contact } from 'lucide-react'
 import CalendarPage from './pages/calendar/Calendar.page'
 import DirectoryPage from './pages/directory/Directory.page'
 import { PageProjets } from './pages/projets/Projects.page'
+import { useAuthInit } from './hooks/useAuthInit'
 
-
-
-
-
-//modifier les noms de pages 
 function App() {
+  useAuthInit()
+
   return (
     <>
       <Routes>
@@ -53,13 +50,10 @@ function App() {
         <Route element={<PrivateRoute />}>
           <Route element={<PrivateLayout />}>
             <Route path="/dashboard" element={<PageDashboard />} />
-            {/* autres routes privées */}
             <Route path="/profile" element={<UserProfile />} />
             <Route path="/profile/edit" element={<EditUserProfile />} />
             <Route path="/notification" element={<PageDashboard />} />
             <Route path="/planning" element={<CalendarPage />} />
-
-            {/* Routes fonctionnalitées */}
             <Route path="/projets" element={<PageProjets />} />
             <Route path="/projets/new/project" element={<ProjectForm />} />
             <Route path="/project/edit/:id" element={<ProjectForm />} />
@@ -68,7 +62,6 @@ function App() {
             <Route path="/projets/:id/new" element={<CreateTask />} />
             <Route path="/projets/:id/devis/new" element={<CreateDevis />} />
             <Route path="/documents" element={<Documents />}>
-            {/* POur faire en sorte que le /documents soit pas vide en arrivant */}
               <Route index element={<Navigate to="/documents/devis" replace />} />
               <Route path="devis" element={<Devis />} />
               <Route path="devis/new" element={<CreateDevis />} />
@@ -101,7 +94,7 @@ function App() {
         {/* 404 */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
-       <ReactQueryDevtools initialIsOpen={false} />
+      <ReactQueryDevtools initialIsOpen={false} />
     </>
   )
 }

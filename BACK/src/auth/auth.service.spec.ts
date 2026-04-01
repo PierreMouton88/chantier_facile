@@ -3,7 +3,7 @@ import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { TokensService } from './services/tokens.service';
 import { UserService } from '../user/user.service';
-import { ConflictException } from '@nestjs/common';
+import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { Role, Prisma } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
@@ -18,9 +18,9 @@ describe('AuthService - signupCustomer', () => {
   const mockDto = {
     email: 'jean@example.com',
     password: 'ValidPass123!',
-    firstName: 'Jean',
+    first_name: 'Jean',
     name: 'Dupont',
-    telephone: '0612345678',
+    phone_number: '0612345678',
     address_line_1: '123 Rue de la Paix',
     zip_code: '75001',
     city: 'Paris',
@@ -29,7 +29,7 @@ describe('AuthService - signupCustomer', () => {
 
   const mockUser = { id: 1 };
   const mockAddress = { id: 1 };
-  const mockProfile = { id: 1 };
+  const mockProfile = { user_id: 1 };
   const mockTokens = {
     accessToken: 'access-token',
     refreshToken: 'refresh-token',
@@ -38,16 +38,16 @@ describe('AuthService - signupCustomer', () => {
     id: 1,
     email: 'jean@example.com',
     role: Role.customer,
-    profile: { id: 1, firstName: 'Jean', name: 'Dupont' },
+    profile: { user_id: 1, first_name: 'Jean', name: 'Dupont' },
   };
 
-  // Transaction mock : exécute le callback avec un faux client Prisma
   const mockTx = {
     user: { create: jest.fn().mockResolvedValue(mockUser) },
     address: { create: jest.fn().mockResolvedValue(mockAddress) },
     profile: { create: jest.fn().mockResolvedValue(mockProfile) },
+    userHasAddresses: { create: jest.fn() },
+    userHasProfession: { createMany: jest.fn() },
     profession: { findMany: jest.fn() },
-    profileHasProfession: { createMany: jest.fn() },
   };
 
   beforeEach(async () => {
@@ -145,7 +145,14 @@ describe('AuthService - signupCustomer', () => {
     expect(mockTx.profile.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          firstName: 'Jean',
+          first_name: 'Jean',
+          user_id: 1,
+        }),
+      }),
+    );
+    expect(mockTx.userHasAddresses.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
           user_id: 1,
           address_id: 1,
         }),
@@ -185,11 +192,11 @@ describe('AuthService - signupCustomer', () => {
     expect(mockTx.profession.findMany).toHaveBeenCalledWith({
       where: { profession_name: { in: ['Plombier'] } },
     });
-    expect(mockTx.profileHasProfession.createMany).toHaveBeenCalledWith(
+    expect(mockTx.userHasProfession.createMany).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.arrayContaining([
           expect.objectContaining({
-            profile_id: 1,
+            user_id: 1,
             profession_id: 10,
           }),
         ]),
@@ -223,5 +230,118 @@ describe('AuthService - signupCustomer', () => {
     await expect(service.signupCustomer(mockDto)).rejects.toThrow(
       'SIRET déjà utilisé',
     );
+  });
+});
+
+//test du sign in et du refresh token dans le même fichier pour éviter de devoir mocker les mêmes fonctions à plusieurs endroits
+
+describe('AuthService - signin', () => {
+  let service: AuthService;
+  let prisma: PrismaService;
+  let tokens: TokensService;
+  let userService: UserService;
+
+  const mockUser = {
+    id: 1,
+    email: 'jean@example.com',
+    password: 'hashed-password',
+    role: Role.customer,
+  };
+
+  const mockTokens = {
+    accessToken: 'access-token',
+    refreshToken: 'refresh-token',
+  };
+
+  const mockUserWithProfile = {
+    id: 1,
+    email: 'jean@example.com',
+    role: Role.customer,
+    profile: { user_id: 1, first_name: 'Jean', name: 'Dupont' },
+  };
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        AuthService,
+        {
+          provide: PrismaService,
+          useValue: {
+            user: { findUnique: jest.fn() },
+            $transaction: jest.fn(),
+          },
+        },
+        {
+          provide: TokensService,
+          useValue: {
+            issueForUser: jest.fn().mockResolvedValue(mockTokens),
+          },
+        },
+        {
+          provide: UserService,
+          useValue: {
+            getcompleteUser: jest.fn().mockResolvedValue(mockUserWithProfile),
+          },
+        },
+      ],
+    }).compile();
+
+    service = module.get<AuthService>(AuthService);
+    prisma = module.get<PrismaService>(PrismaService);
+    tokens = module.get<TokensService>(TokensService);
+    userService = module.get<UserService>(UserService);
+  });
+
+  it('should throw UnauthorizedException if email does not exist', async () => {
+    (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
+
+    await expect(
+      service.signin('unknown@example.com', 'anypassword'),
+    ).rejects.toThrow(UnauthorizedException);
+  });
+
+  it('should throw UnauthorizedException if password is incorrect', async () => {
+    (prisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
+    (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+
+    await expect(
+      service.signin('jean@example.com', 'wrongpassword'),
+    ).rejects.toThrow(UnauthorizedException);
+  });
+
+  it('should return the same error message for wrong email and wrong password', async () => {
+    // Email inexistant
+    (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
+    await expect(
+      service.signin('unknown@example.com', 'anypassword'),
+    ).rejects.toThrow('Identifiants invalides');
+
+    // Mauvais mot de passe
+    (prisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
+    (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+    await expect(
+      service.signin('jean@example.com', 'wrongpassword'),
+    ).rejects.toThrow('Identifiants invalides');
+  });
+
+  it('should call issueForUser with correct userId and role on success', async () => {
+    (prisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
+    (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+
+    await service.signin('jean@example.com', 'ValidPass123!');
+
+    expect(tokens.issueForUser).toHaveBeenCalledWith(1, Role.customer);
+  });
+
+  it('should return tokens and user on successful signin', async () => {
+    (prisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
+    (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+
+    const result = await service.signin('jean@example.com', 'ValidPass123!');
+
+    expect(result.tokens).toEqual(mockTokens);
+    expect(result.user).toEqual(mockUserWithProfile);
   });
 });

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useCreateAddress, useFindAddressById } from '../../hooks/useAddress';
-import { useAuthCtx } from '../../authContext/AuthContext';
+import { useMe } from '../../hooks/useAuth';
 import type { Address } from '../../types/user.type';
 import Button from '../Buttons';
 
@@ -23,7 +23,7 @@ interface AddressPickerProps {
 
 export const AddressPicker: React.FC<AddressPickerProps> = ({ onAddressSelected, currentAddressId, projectAddressId }) => {
   // --- 1 hook & contexte
-  const { user } = useAuthCtx();
+  const { data: user } = useMe();
   const createAddressMutation = useCreateAddress();
   const { data: projectAddress } = useFindAddressById(projectAddressId || 0);
 

@@ -50,12 +50,3 @@ export type AuthResponse = {
   tokens: Tokens;
   user: User;
 };
-
-export interface AuthCtxValue {
-  isAuthenticated: boolean;
-  role: Role | null;
-  user: User | null;
-  isAuthLoading: boolean;
-  loginCtx: (res: AuthResponse) => void;
-  logoutCtx: () => Promise<void>;
-}

@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useCreateProject, useUpdateProject, useFindProjectById } from '../../hooks/useProject';
-import { useAuthCtx } from '../../authContext/AuthContext';
+import { useMe } from '../../hooks/useAuth';
 import Button from '../../components/Buttons';
 import { AddressPicker } from '../../components/pickers/AddressPicker';
 
 export const ProjectForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuthCtx();
+  const { data: user } = useMe();
   const isEditMode = Boolean(id);
 
   const createProject = useCreateProject();

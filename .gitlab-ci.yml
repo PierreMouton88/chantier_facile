@@ -1,5 +1,6 @@
 stages:
   - lint
+  - test
   - build
   - deploy
 
@@ -17,6 +18,19 @@ lint:
     - npm install
     - npx prisma generate
     - npm run lint
+  only:
+    - main
+
+test_back:
+  stage: test
+  image: node:20
+  variables:
+    DATABASE_URL: "mysql://dummy:dummy@localhost:3306/dummy"
+  script:
+    - cd BACK
+    - npm install
+    - npx prisma generate
+    - npm run test
   only:
     - main
 

@@ -3,7 +3,7 @@ import React from 'react';
 import type { Task } from "../../../types/task.type";
 import Button from "../../Buttons";
 import type { Project } from '../../../types/projects.type';
-import { useAuthCtx } from '../../../authContext/AuthContext';
+import { useMe } from '../../../hooks/useAuth';
 
 
 
@@ -17,7 +17,7 @@ const extractProfessions = (task: Task) => {
 
 export const TaskShow: React.FC<{ project: Project | undefined }> = ({ project }) => {
 
-  const { user } = useAuthCtx();
+  const { data: user } = useMe();
 
   if (!project) return <p className="p-4 text-gray-500">Projet introuvable.</p>;
 
