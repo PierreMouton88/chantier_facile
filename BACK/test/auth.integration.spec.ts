@@ -4,6 +4,7 @@ import request from 'supertest';
 import cookieParser from 'cookie-parser';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { ThrottlerGuard } from '@nestjs/throttler';
 
 // Charge les variables d'environnement de test avant tout
 process.env.DATABASE_URL =
@@ -22,7 +23,10 @@ describe('Auth (integration)', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideGuard(ThrottlerGuard) // Désactive le ThrottlerGuard pour éviter les problèmes de rate limit pendant les tests
+      .useValue({ canActivate: () => true })
+      .compile();
 
     app = moduleFixture.createNestApplication();
 
@@ -161,6 +165,58 @@ describe('Auth (integration)', () => {
         .expect(200);
 
       expect(meRes.body.email).toBe(testEmail);
+    });
+  });
+
+  // ─── POST /auth/refresh ───────────────────────────────────────────────────
+
+  describe('POST /auth/refresh', () => {
+    it('401 — sans cookie refresh', () => {
+      return request(app.getHttpServer()).post('/auth/refresh').expect(401);
+    });
+
+    it('201 — rotation réussie + nouveaux cookies', async () => {
+      // Connexion pour obtenir le refresh_token
+      const signinRes = await request(app.getHttpServer())
+        .post('/auth/signin')
+        .send({ email: testEmail, password: testPassword });
+
+      const signinCookies = ([] as string[]).concat(signinRes.headers['set-cookie'] ?? []);
+      const refreshCookie = signinCookies.find((c) => c.startsWith('refresh_token'));
+      expect(refreshCookie).toBeDefined();
+
+      const refreshRes = await request(app.getHttpServer())
+        .post('/auth/refresh')
+        .set('Cookie', refreshCookie!)
+        .expect(201);
+
+      // De nouveaux cookies doivent être posés
+      const newCookies = ([] as string[]).concat(refreshRes.headers['set-cookie'] ?? []);
+      const newCookieStr = newCookies.join(';');
+      expect(newCookieStr).toContain('access_token');
+      expect(newCookieStr).toContain('refresh_token');
+    });
+
+    it('401 — token révoqué (après logout)', async () => {
+      // Connexion
+      const signinRes = await request(app.getHttpServer())
+        .post('/auth/signin')
+        .send({ email: testEmail, password: testPassword });
+
+      const signinCookies = ([] as string[]).concat(signinRes.headers['set-cookie'] ?? []);
+      const refreshCookie = signinCookies.find((c) => c.startsWith('refresh_token'));
+      expect(refreshCookie).toBeDefined();
+
+      // Logout → révoque le refresh token
+      await request(app.getHttpServer())
+        .post('/auth/logout')
+        .set('Cookie', signinCookies.join('; '));
+
+      // Tentative de refresh avec le token révoqué → 401
+      await request(app.getHttpServer())
+        .post('/auth/refresh')
+        .set('Cookie', refreshCookie!)
+        .expect(401);
     });
   });
 
