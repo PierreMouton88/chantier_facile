@@ -19,7 +19,7 @@ lint:
     - npx prisma generate
     - npm run lint
   only:
-    - main
+    - master
 
 test_back:
   stage: test
@@ -32,7 +32,7 @@ test_back:
     - npx prisma generate
     - npm run test
   only:
-    - main
+    - master
 
 test_integration:
   stage: test
@@ -52,7 +52,7 @@ test_integration:
     - npx prisma db push --force-reset
     - npm run test:e2e
   only:
-    - main
+    - master
 
 build_back:
   stage: build
@@ -80,7 +80,7 @@ build_front:
     - docker tag $IMAGE_NAME_FRONT:$CI_COMMIT_SHORT_SHA $IMAGE_NAME_FRONT:latest
     - docker push $IMAGE_NAME_FRONT:latest
   only:
-    - main
+    - master
 
 .deploy_template: &deploy_template
   stage: deploy
@@ -102,7 +102,7 @@ build_front:
       "
   when: manual
   only:
-    - main
+    - master
 
 deploy_pierre:
   <<: *deploy_template
