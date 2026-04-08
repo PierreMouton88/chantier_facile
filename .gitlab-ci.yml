@@ -10,7 +10,7 @@ variables:
 
 lint:
   stage: lint
-  image: node:20
+  image: node:22
   variables:
     DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
   script:
@@ -23,7 +23,7 @@ lint:
 
 test_back:
   stage: test
-  image: node:20
+  image: node:22
   variables:
     DATABASE_URL: "mysql://dummy:dummy@localhost:3306/dummy"
   script:
@@ -36,7 +36,7 @@ test_back:
 
 test_integration:
   stage: test
-  image: node:20
+  image: node:22
   services:
     - name: mysql:8.0
       alias: mysql
