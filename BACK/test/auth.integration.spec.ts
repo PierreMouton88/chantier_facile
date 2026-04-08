@@ -29,6 +29,7 @@ describe('Auth (integration)', () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
+    prisma = moduleFixture.get<PrismaService>(PrismaService);
 
     // Reproduire exactement la config de main.ts
     app.useGlobalPipes(
@@ -41,17 +42,15 @@ describe('Auth (integration)', () => {
     app.use((cookieParser as unknown as () => unknown)() as any);
 
     await app.init();
-
-    prisma = moduleFixture.get<PrismaService>(PrismaService);
   });
 
   afterAll(async () => {
     // Nettoyage : supprimer l'utilisateur créé pendant les tests
-    await prisma.user
+    await prisma?.user
       .deleteMany({ where: { email: testEmail } })
       .catch(() => null);
 
-    await app.close();
+    await app?.close();
   });
 
   // ─── POST /auth/signup ────────────────────────────────────────────────────
@@ -67,7 +66,11 @@ describe('Auth (integration)', () => {
     it('400 — email invalide', () => {
       return request(app.getHttpServer())
         .post('/auth/signup')
-        .send({ email: 'pas-un-email', password: testPassword, first_name: 'Test' })
+        .send({
+          email: 'pas-un-email',
+          password: testPassword,
+          first_name: 'Test',
+        })
         .expect(400);
     });
 
@@ -155,8 +158,12 @@ describe('Auth (integration)', () => {
         .post('/auth/signin')
         .send({ email: testEmail, password: testPassword });
 
-      const cookies = ([] as string[]).concat(signinRes.headers['set-cookie'] ?? []);
-      const accessTokenCookie = cookies.find((c) => c.startsWith('access_token'));
+      const cookies = ([] as string[]).concat(
+        signinRes.headers['set-cookie'] ?? [],
+      );
+      const accessTokenCookie = cookies.find((c) =>
+        c.startsWith('access_token'),
+      );
       expect(accessTokenCookie).toBeDefined();
 
       const meRes = await request(app.getHttpServer())
@@ -181,8 +188,12 @@ describe('Auth (integration)', () => {
         .post('/auth/signin')
         .send({ email: testEmail, password: testPassword });
 
-      const signinCookies = ([] as string[]).concat(signinRes.headers['set-cookie'] ?? []);
-      const refreshCookie = signinCookies.find((c) => c.startsWith('refresh_token'));
+      const signinCookies = ([] as string[]).concat(
+        signinRes.headers['set-cookie'] ?? [],
+      );
+      const refreshCookie = signinCookies.find((c) =>
+        c.startsWith('refresh_token'),
+      );
       expect(refreshCookie).toBeDefined();
 
       const refreshRes = await request(app.getHttpServer())
@@ -191,7 +202,9 @@ describe('Auth (integration)', () => {
         .expect(201);
 
       // De nouveaux cookies doivent être posés
-      const newCookies = ([] as string[]).concat(refreshRes.headers['set-cookie'] ?? []);
+      const newCookies = ([] as string[]).concat(
+        refreshRes.headers['set-cookie'] ?? [],
+      );
       const newCookieStr = newCookies.join(';');
       expect(newCookieStr).toContain('access_token');
       expect(newCookieStr).toContain('refresh_token');
@@ -203,8 +216,12 @@ describe('Auth (integration)', () => {
         .post('/auth/signin')
         .send({ email: testEmail, password: testPassword });
 
-      const signinCookies = ([] as string[]).concat(signinRes.headers['set-cookie'] ?? []);
-      const refreshCookie = signinCookies.find((c) => c.startsWith('refresh_token'));
+      const signinCookies = ([] as string[]).concat(
+        signinRes.headers['set-cookie'] ?? [],
+      );
+      const refreshCookie = signinCookies.find((c) =>
+        c.startsWith('refresh_token'),
+      );
       expect(refreshCookie).toBeDefined();
 
       // Logout → révoque le refresh token
@@ -233,7 +250,9 @@ describe('Auth (integration)', () => {
         .post('/auth/signin')
         .send({ email: testEmail, password: testPassword });
 
-      const cookies = ([] as string[]).concat(signinRes.headers['set-cookie'] ?? []);
+      const cookies = ([] as string[]).concat(
+        signinRes.headers['set-cookie'] ?? [],
+      );
 
       const logoutRes = await request(app.getHttpServer())
         .post('/auth/logout')
@@ -243,7 +262,9 @@ describe('Auth (integration)', () => {
       expect(logoutRes.body.ok).toBe(true);
 
       // Les cookies doivent être supprimés (Max-Age=0 ou Expires dans le passé)
-      const logoutCookies = ([] as string[]).concat(logoutRes.headers['set-cookie'] ?? []);
+      const logoutCookies = ([] as string[]).concat(
+        logoutRes.headers['set-cookie'] ?? [],
+      );
       const cookieStr = logoutCookies.join(';');
       expect(cookieStr).toContain('access_token');
       expect(cookieStr).toMatch(/Max-Age=0|Expires=Thu, 01 Jan 1970/);

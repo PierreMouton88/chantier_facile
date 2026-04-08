@@ -15,7 +15,7 @@ lint:
     DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
   script:
     - cd BACK
-    - npm install
+    - npm ci
     - npx prisma generate
     - npm run lint
   only:
@@ -28,7 +28,7 @@ test_back:
     DATABASE_URL: "mysql://dummy:dummy@localhost:3306/dummy"
   script:
     - cd BACK
-    - npm install
+    - npm ci
     - npx prisma generate
     - npm run test
   only:
@@ -47,7 +47,7 @@ test_integration:
     JWT_SECRET: "test-secret-integration"
   script:
     - cd BACK
-    - npm install
+    - npm ci
     - npx prisma generate
     - npx prisma db push --force-reset
     - npm run test:e2e

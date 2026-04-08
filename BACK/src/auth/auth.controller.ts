@@ -1,4 +1,12 @@
-import { Body, Controller, Post, Get, Req, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Get,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UserDeletionService } from '../user/services/user-deletion.service';
 import { SignupDto } from './dto/signup.dto';
@@ -27,7 +35,6 @@ export class AuthController {
     this.authService.setAuthCookies(res, out.tokens);
     return out;
   }
-
 
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('signup-entreprise')
@@ -80,7 +87,6 @@ export class AuthController {
     this.authService.setAuthCookies(res, out.tokens);
     return out;
   }
-
 
   @SkipThrottle()
   @Get('me')

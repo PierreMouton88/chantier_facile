@@ -12,11 +12,6 @@ describe('TokensService', () => {
   let jwt: JwtService;
   let prisma: PrismaService;
 
-  const mockTokens = {
-    accessToken: 'mock-access-token',
-    refreshToken: 'mock-refresh-token',
-  };
-
   // Mock de transaction Prisma : exécute le callback directement
   const mockTx = {
     refreshToken: {
@@ -28,9 +23,9 @@ describe('TokensService', () => {
     },
   };
 
-    beforeEach(async () => {
+  beforeEach(async () => {
     jest.clearAllMocks();
-    mockTx.refreshToken.findMany.mockReset(); 
+    mockTx.refreshToken.findMany.mockReset();
     (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-token');
     (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 

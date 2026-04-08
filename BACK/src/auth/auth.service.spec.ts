@@ -239,7 +239,6 @@ describe('AuthService - signin', () => {
   let service: AuthService;
   let prisma: PrismaService;
   let tokens: TokensService;
-  let userService: UserService;
 
   const mockUser = {
     id: 1,
@@ -291,7 +290,6 @@ describe('AuthService - signin', () => {
     service = module.get<AuthService>(AuthService);
     prisma = module.get<PrismaService>(PrismaService);
     tokens = module.get<TokensService>(TokensService);
-    userService = module.get<UserService>(UserService);
   });
 
   it('should throw UnauthorizedException if email does not exist', async () => {

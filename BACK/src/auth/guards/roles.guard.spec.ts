@@ -3,7 +3,7 @@ import { RolesGuard } from './roles.guard';
 import { Reflector } from '@nestjs/core';
 import { ForbiddenException } from '@nestjs/common';
 import { userRole } from '../../user/enum/role.enum';
-import { ROLES_KEY } from '../decorators/roles.decorator';
+import { ROLES_KEY as _ROLES_KEY } from '../decorators/roles.decorator';
 
 // Fabrique un ExecutionContext mocké avec un user injecté
 function mockContext(user: any) {
@@ -61,7 +61,9 @@ describe('RolesGuard', () => {
   });
 
   it('should allow admin access regardless of required roles (god mode)', async () => {
-    (reflector.getAllAndOverride as jest.Mock).mockReturnValue([userRole.Customer]);
+    (reflector.getAllAndOverride as jest.Mock).mockReturnValue([
+      userRole.Customer,
+    ]);
     const context = mockContext({ role: userRole.Admin }); // admin essaie d'accéder à route customer
 
     const result = await guard.canActivate(context);
@@ -70,7 +72,9 @@ describe('RolesGuard', () => {
   });
 
   it('should allow access when user has the required role', async () => {
-    (reflector.getAllAndOverride as jest.Mock).mockReturnValue([userRole.Customer]);
+    (reflector.getAllAndOverride as jest.Mock).mockReturnValue([
+      userRole.Customer,
+    ]);
     const context = mockContext({ role: userRole.Customer });
 
     const result = await guard.canActivate(context);
@@ -91,23 +95,35 @@ describe('RolesGuard', () => {
   });
 
   it('should throw ForbiddenException when user role does not match', async () => {
-    (reflector.getAllAndOverride as jest.Mock).mockReturnValue([userRole.Admin]);
+    (reflector.getAllAndOverride as jest.Mock).mockReturnValue([
+      userRole.Admin,
+    ]);
     const context = mockContext({ role: userRole.Customer });
 
-    await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);
+    await expect(guard.canActivate(context)).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 
   it('should throw ForbiddenException when user is not defined on request', async () => {
-    (reflector.getAllAndOverride as jest.Mock).mockReturnValue([userRole.Customer]);
+    (reflector.getAllAndOverride as jest.Mock).mockReturnValue([
+      userRole.Customer,
+    ]);
     const context = mockContext(null); // pas de user sur la requête
 
-    await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);
+    await expect(guard.canActivate(context)).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 
   it('should throw ForbiddenException when user has no role', async () => {
-    (reflector.getAllAndOverride as jest.Mock).mockReturnValue([userRole.Customer]);
+    (reflector.getAllAndOverride as jest.Mock).mockReturnValue([
+      userRole.Customer,
+    ]);
     const context = mockContext({ id: 1 }); // user sans propriété role
 
-    await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);
+    await expect(guard.canActivate(context)).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 });
