@@ -66,7 +66,7 @@ build_back:
     - docker tag $IMAGE_NAME_BACK:$CI_COMMIT_SHORT_SHA $IMAGE_NAME_BACK:latest
     - docker push $IMAGE_NAME_BACK:latest
   only:
-    - main
+    - master
 
 build_front:
   stage: build
@@ -98,7 +98,7 @@ build_front:
         docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY &&
         docker pull $IMAGE_NAME_BACK:latest &&
         docker pull $IMAGE_NAME_FRONT:latest &&
-        BACK_IMAGE=$IMAGE_NAME_BACK:latest FRONT_IMAGE=$IMAGE_NAME_FRONT:latest docker compose -f ~/docker-compose.yml up -d back front
+        BACK_IMAGE=$IMAGE_NAME_BACK:latest FRONT_IMAGE=$IMAGE_NAME_FRONT:latest docker compose -f ~/docker-compose.yml up -d
       "
   when: manual
   only:
