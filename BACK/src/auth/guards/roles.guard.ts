@@ -31,18 +31,15 @@ export class RolesGuard implements CanActivate {
     if (user.role === userRole.Admin) {
       return true;
     }
-    // 1. Normalisation du rôle utilisateur et des rôles requis
     const userRoleNormalized = user.role.toLowerCase().trim();
     const requiredRolesNormalized = requiredRoles.map((role) =>
       role.toLowerCase().trim(),
     );
 
-    // 2. Ajout d'une vérification de rôle super-utilisateur sur la version normalisée
     if (userRoleNormalized === 'admin') {
       return true;
     }
 
-    // 3. Vérification finale sur les valeurs normalisées (Ceci doit fonctionner !)
     const hasRequiredRole =
       requiredRolesNormalized.includes(userRoleNormalized);
 
@@ -54,13 +51,5 @@ export class RolesGuard implements CanActivate {
       `Accès refusé. Rôle requis : ${requiredRoles.join(' ou ')}.`,
     );
 
-    // const hasRequiredRole = requiredRoles.includes(user.role);
-
-    // if (hasRequiredRole) {
-    //   return true;
-    // }
-    // throw new ForbiddenException(
-    //   `Accès refusé. Rôle requis : ${requiredRoles.join(' ou ')}.`,
-    // );
   }
 }
